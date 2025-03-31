@@ -24,6 +24,9 @@ html, body{
     padding: 0px;
     max-width: 1440px;
     width: calc(100vw - 32px);
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
 
 }
 
@@ -33,6 +36,6 @@ html, body{
 
 .leaflet-control-zoom{
     position: absolute;
-    top: 64px;
+    top: 80px;
     right: 8px;
 }
