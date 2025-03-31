@@ -30,12 +30,47 @@ html, body{
 
 }
 
-#searchBar{
+#searchInput{
     height: 50px;
+}
+
+.btnStyle{
+    background-color: #282828;
+    color: #fefefe;
+    padding: 8px 24px;
+}
+
+.btnStyle:hover{
+    background-color: #282828;
+    color: #fefefe;
+    border-color: #fefefe;
+    transition-duration: 0.3s;
+    
+}
+
+#nav{
+    background-color: #fefefe;
+    gap: 0px !important;
 }
 
 .leaflet-control-zoom{
     position: absolute;
     top: 80px;
     right: 8px;
+}
+
+#nav{
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    /* height: 100px; */
+    z-index: 1000;
+    border-radius: 16px;
+    border-color: #fefefe solid 2px;
+    padding: 0px;
+    max-width: 1440px;
+    width: fit-content;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
 }
