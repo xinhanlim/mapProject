@@ -19,4 +19,18 @@ window.addEventListener('load', function(){
             accept: 'application/json',
             Authorization: apiKEY
           }
-})
+
+    async function search(lat,lng,query) {
+        let latlng = `${lat}, ${lng}`;
+        // this url is to let the system fetch later on.
+        let url = `apiURL/places/search?query=${query}&ll=${latlng}`;
+
+        let response = await fetch(url,{
+            headers: {...headers},
+        })
+
+        return await response.json();
+
+    }
+
+    })
