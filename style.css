@@ -17,7 +17,7 @@ html, body{
     position: absolute;
     top: 16px;
     left: 16px;
-    height: 100px;
+    /* height: 100px; */
     z-index: 1000;
     border-radius: 16px;
     border-color: #fefefe solid 2px;
@@ -32,5 +32,7 @@ html, body{
 }
 
 .leaflet-control-zoom{
+    position: absolute;
     top: 64px;
+    right: 8px;
 }
