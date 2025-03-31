@@ -5,7 +5,7 @@ window.addEventListener('load', function(){
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom:19,
         attribution:
-        '&copy; <a href="httpL//www.openstreetmap.org/copyright">OpenstreetMap</a>',
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenstreetMap</a>',
     }).addTo(map);
     
     // Add zoom control manually to the top right
@@ -13,4 +13,10 @@ window.addEventListener('load', function(){
         position: 'topright'
     }).addTo(map);
     
+    let apiKEY = "fsq3mir5JyWmycFrvHEnipkB8SZI/HbogiUfPOy4JZQr2c0=";
+    let apiURL = "https://api.foursquare.com/v3";
+    let headers = {
+            accept: 'application/json',
+            Authorization: apiKEY
+          }
 })
