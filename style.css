@@ -55,14 +55,30 @@ html, body{
 
 .leaflet-control-zoom{
     position: absolute;
-    top: 80px;
+    top: 72px;
     right: 8px;
 }
 
 #nav{
     position: absolute;
-    bottom: 16px;
+    top: 82px;
     left: 16px;
+    /* height: 100px; */
+    z-index: 1000;
+    border-radius: 16px;
+    border-color: #fefefe solid 2px;
+    padding: 0px;
+    max-width: 1440px;
+    width: fit-content;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+#centeralisedView{
+    position: absolute;
+    top: calc(240px - 80px);
+    right: 16px;
     /* height: 100px; */
     z-index: 1000;
     border-radius: 16px;
