@@ -6,6 +6,7 @@ window.addEventListener("load", function () {
   );
   let markers = [];
   let clusterMakerLayer = L.markerClusterGroup();
+  let selectedFavouriteName = null;
 
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -34,7 +35,6 @@ window.addEventListener("load", function () {
     Authorization: apiKEY,
   };
 
-  
   async function search(query) {
     let center = map.getCenter();
     let latlng = `${center.lat},${center.lng}`;
@@ -76,35 +76,55 @@ window.addEventListener("load", function () {
   let hamburgerMenu = document.querySelector(".hamburgerMenu");
   let offcanvasElement = document.getElementById("offcanvasMenu");
 
-  hamburgerMenu.addEventListener("click", function(){
-    hamburgerMenu.classList.toggle('active');
-  })
+  hamburgerMenu.addEventListener("click", function () {
+    hamburgerMenu.classList.toggle("active");
+  });
   offcanvasElement.addEventListener("hidden.bs.offcanvas", function () {
     hamburgerMenu.classList.remove("active");
-  })
-  
+  });
+
   let favourites = [];
 
   function favouritesList() {
-    let favouriteContainer = document.getElementById("favouritesList");
+    let favouriteContainer = document.getElementById("offcanvasFavouritesList");
     favouriteContainer.innerHTML = "";
 
     let ul = document.createElement("ul");
     favourites.forEach((places) => {
       let li = document.createElement("li");
       li.textContent = places.name;
-      ul.appendChild(li);
+      
+      if (places.name === selectedFavouriteName) {
+        li.classList.add("active");
+      }
+  
+      li.addEventListener("click", () => {
+        document.querySelectorAll("#offcanvasFavouritesList li").forEach(item => {
+            item.classList.remove("active");
+          });
+          li.classList.add("active");
+        selectedFavouriteName = places.name;
+        map.flyTo([places.lat, places.lng], 16);
+        map.once("moveend", function () {
+        for (let i = 0; i < markers.length; i++) {
+            const popupContent = markers[i].getPopup().getContent();
+            if (popupContent.includes(places.name)) {
+              markers[i].openPopup();
+              break;
+            }
+          }
+        });
     });
+    ul.appendChild(li);
+});
     favouriteContainer.appendChild(ul);
   }
 
   document.addEventListener("click", function (event) {
-    // Check if the clicked element is our "Add to Favourites" button
     if (event.target && event.target.className.includes("favourite-btn")) {
       let placeName = event.target.getAttribute("data-name");
       console.log(placeName);
 
-      // Check if already in favourites
       let placeExisted = false;
       for (let i = 0; i < favourites.length; i++) {
         if (favourites[i].name === placeName) {
@@ -119,6 +139,7 @@ window.addEventListener("load", function () {
           let popupContent = markers[i].getPopup().getContent();
           if (popupContent.includes(placeName)) {
             foundMarker = markers[i];
+            alert("Added Successfully to Favourites")
             break;
           }
         }
@@ -146,4 +167,13 @@ window.addEventListener("load", function () {
     .getElementById("favourites")
     .addEventListener("click", favouritesList);
   map.on("moveend", showResult);
+  document
+    .getElementById("toggleFavouritesBtn")
+    .addEventListener("click", function () {
+      const list = document.getElementById("offcanvasFavouritesList");
+      const isShown = list.style.display === "block";
+
+      list.style.display = isShown ? "none" : "block";
+      this.textContent = isShown ? "+" : "−"; // Toggle icon
+    });
 });
