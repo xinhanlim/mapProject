@@ -34,6 +34,7 @@ window.addEventListener("load", function () {
     Authorization: apiKEY,
   };
 
+  
   async function search(query) {
     let center = map.getCenter();
     let latlng = `${center.lat},${center.lng}`;
@@ -72,6 +73,16 @@ window.addEventListener("load", function () {
     }
   }
 
+  let hamburgerMenu = document.querySelector(".hamburgerMenu");
+  let offcanvasElement = document.getElementById("offcanvasMenu");
+
+  hamburgerMenu.addEventListener("click", function(){
+    hamburgerMenu.classList.toggle('active');
+  })
+  offcanvasElement.addEventListener("hidden.bs.offcanvas", function () {
+    hamburgerMenu.classList.remove("active");
+  })
+  
   let favourites = [];
 
   function favouritesList() {
