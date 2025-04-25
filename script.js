@@ -44,13 +44,14 @@ window.addEventListener("load", async function () {
     let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID));
     dataFromJSONBIN = await dataFromJSONBIN.json();
     favourites = dataFromJSONBIN.record.favourites;
+    favouritesList();
     console.log(dataFromJSONBIN);
   }
   importFromJSONBIN();
 
   async function exportToJSONBIN() {
     let JSONBIN_ACCESS_KEY = "$2a$10$KwFo.bBhc5y1wL6uCEMo8efU.C5eISs9RMiN1LKnp9nbtH4hCexI.";
-    let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID), {
+    let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID) + "/latest", {
       method: "PUT",
       headers: {
         "Content-type": "application/json",
