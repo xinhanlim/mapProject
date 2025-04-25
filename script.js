@@ -1,4 +1,4 @@
-window.addEventListener("load", function () {
+window.addEventListener("load", async function () {
   let singapore = [1.29, 103.85];
   let map = L.map("mapContainer", { zoomControl: false }).setView(
     singapore,
@@ -7,6 +7,7 @@ window.addEventListener("load", function () {
   let markers = [];
   let clusterMakerLayer = L.markerClusterGroup();
   let selectedFavouriteName = null;
+  let favourites = [];
 
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -25,8 +26,8 @@ window.addEventListener("load", function () {
 
   let JSONBIN_API_KEY =
     "$2a$10$KwFo.bBhc5y1wL6uCEMo8efU.C5eISs9RMiN1LKnp9nbtH4hCexI";
-  let BIN_ID = "67f8d0508561e97a50fd4ffb";
-  let JSONBIN_ROOT_URL = "https://api.jsonbin.io/v3";
+  const BIN_ID = "67f8d0258a456b7966871caa";
+  const JSONBIN_ROOT_URL = "https://api.jsonbin.io/v3";
 
   let apiKEY = "fsq3mir5JyWmycFrvHEnipkB8SZI/HbogiUfPOy4JZQr2c0=";
   let apiURL = "https://api.foursquare.com/v3";
@@ -34,6 +35,33 @@ window.addEventListener("load", function () {
     accept: "application/json",
     Authorization: apiKEY,
   };
+
+  function GET_JSONBIN_ROOT_URL(BIN_ID) {
+    return JSONBIN_ROOT_URL + "/b/" + BIN_ID;
+  }
+
+  async function importFromJSONBIN() {
+    let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID));
+    dataFromJSONBIN = await dataFromJSONBIN.json();
+    favourites = dataFromJSONBIN.record.favourites;
+    console.log(dataFromJSONBIN);
+  }
+  importFromJSONBIN();
+
+  async function exportToJSONBIN() {
+    let JSONBIN_ACCESS_KEY = "$2a$10$KwFo.bBhc5y1wL6uCEMo8efU.C5eISs9RMiN1LKnp9nbtH4hCexI.";
+    let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID), {
+      method: "PUT",
+      headers: {
+        "Content-type": "application/json",
+        "X-Access-Key": JSONBIN_ACCESS_KEY,
+      },
+      body: JSON.stringify({
+        favourites: favourites,
+      }),
+    });
+  }
+  
 
   async function search(query) {
     let center = map.getCenter();
@@ -83,8 +111,6 @@ window.addEventListener("load", function () {
     hamburgerMenu.classList.remove("active");
   });
 
-  let favourites = [];
-
   function favouritesList() {
     let favouriteContainer = document.getElementById("offcanvasFavouritesList");
     favouriteContainer.innerHTML = "";
@@ -93,20 +119,22 @@ window.addEventListener("load", function () {
     favourites.forEach((places) => {
       let li = document.createElement("li");
       li.textContent = places.name;
-      
+
       if (places.name === selectedFavouriteName) {
         li.classList.add("active");
       }
-  
+
       li.addEventListener("click", () => {
-        document.querySelectorAll("#offcanvasFavouritesList li").forEach(item => {
+        document
+          .querySelectorAll("#offcanvasFavouritesList li")
+          .forEach((item) => {
             item.classList.remove("active");
           });
-          li.classList.add("active");
+        li.classList.add("active");
         selectedFavouriteName = places.name;
         map.flyTo([places.lat, places.lng], 16);
         map.once("moveend", function () {
-        for (let i = 0; i < markers.length; i++) {
+          for (let i = 0; i < markers.length; i++) {
             const popupContent = markers[i].getPopup().getContent();
             if (popupContent.includes(places.name)) {
               markers[i].openPopup();
@@ -114,9 +142,9 @@ window.addEventListener("load", function () {
             }
           }
         });
+      });
+      ul.appendChild(li);
     });
-    ul.appendChild(li);
-});
     favouriteContainer.appendChild(ul);
   }
 
@@ -139,7 +167,7 @@ window.addEventListener("load", function () {
           let popupContent = markers[i].getPopup().getContent();
           if (popupContent.includes(placeName)) {
             foundMarker = markers[i];
-            alert("Added Successfully to Favourites")
+            alert("Added Successfully to Favourites");
             break;
           }
         }
@@ -153,6 +181,7 @@ window.addEventListener("load", function () {
           });
           console.log(favourites);
           favouritesList();
+          exportToJSONBIN();
         } else {
           alert("Marker not found!");
         }
