@@ -161,4 +161,8 @@ html, body{
     background-color: #fefefe;
   }
 
+  .menuHidden {
+    display: none;
+  }
+
 
