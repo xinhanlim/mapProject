@@ -18,12 +18,13 @@ html, body{
     position: absolute;
     top: 16px;
     left: 16px;
+    right: 16px;
     /* height: 100px; */
     z-index: 2000;
     border-radius: 16px;
     border-color: #fefefe solid 2px;
     padding: 0px;
-    width: calc(100vw - 32px);
+    /* width: calc(100vw - 32px); */
     display: flex;
     flex-direction: row;
     gap: 8px;
@@ -32,6 +33,7 @@ html, body{
 
 #searchInput{
     height: 50px;
+    flex-grow: 1;
 }
 
 .btnStyle{
