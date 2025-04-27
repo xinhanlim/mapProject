@@ -23,7 +23,6 @@ html, body{
     border-radius: 16px;
     border-color: #fefefe solid 2px;
     padding: 0px;
-    max-width: 1440px;
     width: calc(100vw - 32px);
     display: flex;
     flex-direction: row;
