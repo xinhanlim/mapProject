@@ -50,19 +50,22 @@ window.addEventListener("load", async function () {
   importFromJSONBIN();
 
   async function exportToJSONBIN() {
-    let JSONBIN_ACCESS_KEY = "$2a$10$KwFo.bBhc5y1wL6uCEMo8efU.C5eISs9RMiN1LKnp9nbtH4hCexI.";
-    let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID) + "/latest", {
-      method: "PUT",
-      headers: {
-        "Content-type": "application/json",
-        "X-Access-Key": JSONBIN_ACCESS_KEY,
-      },
-      body: JSON.stringify({
-        favourites: favourites,
-      }),
-    });
+    let JSONBIN_ACCESS_KEY =
+      "$2a$10$KwFo.bBhc5y1wL6uCEMo8efU.C5eISs9RMiN1LKnp9nbtH4hCexI.";
+    let dataFromJSONBIN = await fetch(
+      GET_JSONBIN_ROOT_URL(BIN_ID) + "/latest",
+      {
+        method: "PUT",
+        headers: {
+          "Content-type": "application/json",
+          "X-Access-Key": JSONBIN_ACCESS_KEY,
+        },
+        body: JSON.stringify({
+          favourites: favourites,
+        }),
+      }
+    );
   }
-  
 
   async function search(query) {
     let center = map.getCenter();
@@ -116,6 +119,8 @@ window.addEventListener("load", async function () {
     let favouriteContainer = document.getElementById("offcanvasFavouritesList");
     favouriteContainer.innerHTML = "";
 
+    favouriteContainer.classList.remove("menuHidden");
+
     let ul = document.createElement("ul");
     favourites.forEach((places) => {
       let li = document.createElement("li");
@@ -133,21 +138,27 @@ window.addEventListener("load", async function () {
           });
         li.classList.add("active");
         selectedFavouriteName = places.name;
-        map.flyTo([places.lat, places.lng], 16);
-        map.once("moveend", function () {
-          for (let i = 0; i < markers.length; i++) {
-            const popupContent = markers[i].getPopup().getContent();
-            if (popupContent.includes(places.name)) {
-              markers[i].openPopup();
-              break;
-            }
+
+        let targetMarker = null;
+        for (let i = 0; i < markers.length; i++) {
+          const popupContent = markers[i].getPopup().getContent();
+          if (popupContent.includes(places.name)) {
+            targetMarker = markers[i];
+            break;
           }
+        }
+          if (targetMarker) {
+            const latlng = targetMarker.getLatLng();
+            map.flyTo([latlng.lat, latlng.lng], 16)
+          map.once("moveend", function () {
+            targetMarker.openPopup();
+          });
+        }
         });
-      });
       ul.appendChild(li);
     });
     favouriteContainer.appendChild(ul);
-  }
+  };
 
   document.addEventListener("click", function (event) {
     if (event.target && event.target.className.includes("favourite-btn")) {
@@ -196,14 +207,13 @@ window.addEventListener("load", async function () {
   document
     .getElementById("favourites")
     .addEventListener("click", favouritesList);
-  map.on("moveend", showResult);
   document
     .getElementById("toggleFavouritesBtn")
     .addEventListener("click", function () {
       const list = document.getElementById("offcanvasFavouritesList");
-      const isShown = list.style.display === "block";
+      list.classList.toggle("menuHidden");
 
-      list.style.display = isShown ? "none" : "block";
-      this.textContent = isShown ? "+" : "−"; // Toggle icon
+      const isHidden = list.classList.contains("menuHidden");
+      this.textContent = isHidden ? "+" : "−";
     });
 });
