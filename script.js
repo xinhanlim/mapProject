@@ -4,8 +4,35 @@ window.addEventListener("load", async function () {
     singapore,
     14
   );
-  let markers = [];
-  let clusterMakerLayer = L.markerClusterGroup();
+  //offcanvas close when click on empty map.
+  map.on("click", function (e) {
+    // Skip offcanvas closing if it was triggered from favourites
+    if (justClickedFromFavourites) {
+      justClickedFromFavourites = false; // reset flag
+      return;
+    }
+
+    const clickedElement = e.originalEvent.target;
+    const clickedInsidePopup =
+      clickedElement.closest(".leaflet-popup") ||
+      clickedElement.closest(".leaflet-marker-icon");
+
+    if (!clickedInsidePopup) {
+      const offcanvasEl = document.getElementById("offcanvasMenu");
+      const offcanvasInstance =
+        bootstrap.Offcanvas.getInstance(offcanvasEl) ||
+        new bootstrap.Offcanvas(offcanvasEl);
+      offcanvasInstance.hide();
+
+      document.querySelectorAll("#offcanvasFavouritesList li").forEach((li) => {
+        li.classList.remove("active");
+      });
+    }
+  });
+
+  let searchMarkers = [];
+  let favouriteMarkers = [];
+  //   let clusterMakerLayer = L.markerClusterGroup();
   let selectedFavouriteName = null;
   let favourites = [];
 
@@ -22,10 +49,8 @@ window.addEventListener("load", async function () {
     })
     .addTo(map);
 
-  map.addLayer(clusterMakerLayer);
+  //   map.addLayer(clusterMakerLayer);
 
-  let JSONBIN_API_KEY =
-    "$2a$10$KwFo.bBhc5y1wL6uCEMo8efU.C5eISs9RMiN1LKnp9nbtH4hCexI";
   const BIN_ID = "67f8d0258a456b7966871caa";
   const JSONBIN_ROOT_URL = "https://api.jsonbin.io/v3";
 
@@ -44,6 +69,21 @@ window.addEventListener("load", async function () {
     let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID));
     dataFromJSONBIN = await dataFromJSONBIN.json();
     favourites = dataFromJSONBIN.record.favourites;
+    favouriteMarkers.forEach((m) => map.removeLayer(m));
+    favouriteMarkers = [];
+
+    favourites.forEach((places) => {
+      let marker = L.marker([places.lat, places.lng]).bindPopup(
+        `<strong>${places.name}</strong>
+      <button type="button" class="removeFavBtn btn btn-danger" data-name="${places.name}">Remove From Favourites</button>
+      `
+      );
+
+      marker.placeName = places.name;
+      //   clusterMakerLayer.addLayer(marker);
+      marker.addTo(map);
+      favouriteMarkers.push(marker);
+    });
     favouritesList();
     console.log(dataFromJSONBIN);
   }
@@ -52,19 +92,16 @@ window.addEventListener("load", async function () {
   async function exportToJSONBIN() {
     let JSONBIN_ACCESS_KEY =
       "$2a$10$KwFo.bBhc5y1wL6uCEMo8efU.C5eISs9RMiN1LKnp9nbtH4hCexI.";
-    let dataFromJSONBIN = await fetch(
-      GET_JSONBIN_ROOT_URL(BIN_ID) + "/latest",
-      {
-        method: "PUT",
-        headers: {
-          "Content-type": "application/json",
-          "X-Access-Key": JSONBIN_ACCESS_KEY,
-        },
-        body: JSON.stringify({
-          favourites: favourites,
-        }),
-      }
-    );
+    let dataFromJSONBIN = await fetch(GET_JSONBIN_ROOT_URL(BIN_ID), {
+      method: "PUT",
+      headers: {
+        "Content-type": "application/json",
+        "X-Access-Key": JSONBIN_ACCESS_KEY,
+      },
+      body: JSON.stringify({
+        favourites: favourites,
+      }),
+    });
   }
 
   async function search(query) {
@@ -84,8 +121,9 @@ window.addEventListener("load", async function () {
     let query = document.getElementById("searchInput").value;
     let result = await search(query);
     console.log(result);
-    clusterMakerLayer.clearLayers();
-    markers = [];
+    // clusterMakerLayer.clearLayers();
+    searchMarkers.forEach((m) => map.removeLayer(m));
+    searchMarkers = [];
 
     for (let i = 0; i < result.results.length; i++) {
       let places = result.results[i];
@@ -94,15 +132,41 @@ window.addEventListener("load", async function () {
         places.geocodes.main.longitude,
       ];
 
-      let marker = L.marker(placesCoordinate).bindPopup(
-        `<strong>${places.name}</strong> <div>
-         <button type="button" class="btn btn-sm btn-primary favourite-btn" data-name="${places.name}">
-         Add to Favourites</button>
-         </div>`
+      let alreadyFavourited = favourites.some(
+        (fav) => fav.name === places.name
       );
-      clusterMakerLayer.addLayer(marker);
-      markers.push(marker);
+      let popupHTML = `<strong>${places.name}</strong> <div>`;
+      if (alreadyFavourited) {
+        popupHTML += `<button type="button" class="removeFavBtn btn btn-danger" data-name="${places.name}">Remove From Favourites</button>`;
+      } else {
+        popupHTML += `<button type="button" class="btn btn-sm btn-primary favourite-btn" data-name="${places.name}">
+         Add to Favourites</button>`;
+      }
+
+      let marker = L.marker(placesCoordinate).bindPopup(popupHTML);
+      //   clusterMakerLayer.addLayer(marker);
+      marker.placeName = places.name;
+      marker.addTo(map);
+      searchMarkers.push(marker);
     }
+    favourites.forEach((fav) => {
+      const alreadyExists =
+        searchMarkers.some((m) => m.placeName === fav.name) ||
+        favouriteMarkers.some((m) => m.placeName === fav.name);
+
+      if (!alreadyExists) {
+        let marker = L.marker([fav.lat, fav.lng]).bindPopup(
+          `<strong>${fav.name}</strong><br>
+             <button type="button" class="remove-favourite-btn btn btn-danger" data-name="${fav.name}">
+               Remove From Favourites
+             </button>`
+        );
+        marker.placeName = fav.name;
+        //   clusterMakerLayer.addLayer(marker);
+        marker.addTo(map);
+        favouriteMarkers.push(marker);
+      }
+    });
   }
 
   let hamburgerMenu = document.querySelector(".hamburgerMenu");
@@ -140,26 +204,32 @@ window.addEventListener("load", async function () {
         selectedFavouriteName = places.name;
 
         let targetMarker = null;
-        for (let i = 0; i < markers.length; i++) {
-          const popupContent = markers[i].getPopup().getContent();
-          if (popupContent.includes(places.name)) {
-            targetMarker = markers[i];
+        let allMarkers = [...searchMarkers, ...favouriteMarkers];
+        for (let i = 0; i < allMarkers.length; i++) {
+          if (allMarkers[i].placeName === places.name) {
+            targetMarker = allMarkers[i];
             break;
           }
         }
-          if (targetMarker) {
-            const latlng = targetMarker.getLatLng();
-            map.flyTo([latlng.lat, latlng.lng], 16)
+        if (targetMarker) {
+          const latlng = targetMarker.getLatLng();
+          justClickedFromFavourites = true;
+          map.flyTo([latlng.lat, latlng.lng], 16);
           map.once("moveend", function () {
             targetMarker.openPopup();
+            const offcanvasElement = document.getElementById("offcanvasMenu");
+            const offcanvasInstance =
+              bootstrap.Offcanvas.getInstance(offcanvasElement) ||
+              new bootstrap.Offcanvas(offcanvasElement);
+
           });
         }
-        });
+      });
       ul.appendChild(li);
     });
     favouriteContainer.appendChild(ul);
-  };
-
+  }
+  // Add Favorites
   document.addEventListener("click", function (event) {
     if (event.target && event.target.className.includes("favourite-btn")) {
       let placeName = event.target.getAttribute("data-name");
@@ -175,10 +245,10 @@ window.addEventListener("load", async function () {
 
       if (!placeExisted) {
         let foundMarker = null;
-        for (let i = 0; i < markers.length; i++) {
-          let popupContent = markers[i].getPopup().getContent();
+        for (let i = 0; i < searchMarkers.length; i++) {
+          let popupContent = searchMarkers[i].getPopup().getContent();
           if (popupContent.includes(placeName)) {
-            foundMarker = markers[i];
+            foundMarker = searchMarkers[i];
             alert("Added Successfully to Favourites");
             break;
           }
@@ -191,15 +261,43 @@ window.addEventListener("load", async function () {
             lat: latlng.lat,
             lng: latlng.lng,
           });
-          console.log(favourites);
+          //   console.log(favourites);
+          let marker = L.marker([latlng.lat, latlng.lng]).bindPopup(
+            `<strong>${placeName}</strong><br>
+             <button type="button" class="removeFavBtn btn btn-danger" data-name="${placeName}">
+             Remove From Favourites</button>`
+          );
+          marker.placeName = placeName;
+          favouriteMarkers.push(marker);
+          marker.addTo(map);
+
           favouritesList();
           exportToJSONBIN();
+          showResult();
         } else {
           alert("Marker not found!");
         }
       } else {
         alert("Already in Favourites");
       }
+    }
+  });
+  //Remove from Favourites
+  document.addEventListener("click", function (event) {
+    if (event.target && event.target.classList.contains("removeFavBtn")) {
+      const placeName = event.target.dataset.name;
+      favourites = favourites.filter((place) => place.name !== placeName);
+      for (let i = 0; i < favouriteMarkers.length; i++) {
+        if (favouriteMarkers[i].placeName === placeName) {
+          map.removeLayer(favouriteMarkers[i]);
+          favouriteMarkers.splice(i, 1);
+          break;
+        }
+      }
+      exportToJSONBIN();
+      favouritesList();
+      map.closePopup();
+      alert(`${placeName} Removed From favourites`);
     }
   });
 
