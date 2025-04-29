@@ -49,7 +49,7 @@ window.addEventListener("load", async function () {
     })
     .addTo(map);
 
-  //   map.addLayer(clusterMakerLayer);
+  //   map.addLayer(clusterMakerLayer)
 
   const BIN_ID = "67f8d0258a456b7966871caa";
   const JSONBIN_ROOT_URL = "https://api.jsonbin.io/v3";
